@@ -1,0 +1,32 @@
+.view-id-websites {
+	.views-column  {
+		height:240px;
+		  @include breakpoint(max-width $breakpointwidth){
+                height:auto;
+                margin-bottom:15px;
+        }
+		
+		position:relative;
+		.views-field-field-image {
+			border:1px solid #ccc;
+		}
+		.views-field-title {
+			position:absolute;
+			top:0;
+
+			background:rgba(0,0,0,0.8);
+			color:white;
+			font-weight:bold;
+			padding:5px;
+		}
+	}
+}
+
+
+#block-block-4  {
+	padding:15px 0 0;
+}
+
+.footer {
+	background:#efefef;
+}

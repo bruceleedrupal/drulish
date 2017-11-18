@@ -1,0 +1,62 @@
+// Default variables.
+@import 'default-variables';
+@import 'breakpoint';
+
+// Bootstrap Framework.
+@import '../bootstrap/assets/stylesheets/bootstrap';
+
+// Base-theme overrides.
+@import 'overrides';
+@import 'components/**/*';
+
+
+
+.logo img {
+	width:32px;
+}
+
+
+.node-contact_form-form {
+	.group-left {
+		width:48%;
+		float:left;
+		margin-bottom: 10px;
+		 @include breakpoint(max-width $breakpointwidth){
+                width:100%;
+        }
+		
+	}
+	
+	.group-right {
+		width:50%;
+		float:right;
+		 margin-bottom: 10px;
+		  @include breakpoint(max-width $breakpointwidth){
+                width:100%;
+        }
+		 
+	}
+}
+
+#block-block-1 {
+	margin-bottom:20px;
+	
+}
+
+
+
+.kf { 
+
+   float:left;
+   line-height:50px;
+   margin:0 15px;
+    font-size: 18px;
+
+
+    i {
+    	color:white;
+    }
+
+    
+    
+}
