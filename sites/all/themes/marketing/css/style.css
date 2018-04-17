@@ -9968,3 +9968,10 @@ a.icon-after .glyphicon {
 .kf i {
   color: white;
 }
+
+@media (max-width: 800px) {
+  /* line 63, ../scss/style.scss */
+  body.toolbar-drawer {
+    padding-top: 100px !important;
+  }
+}
