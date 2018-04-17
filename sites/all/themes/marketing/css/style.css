@@ -9971,7 +9971,7 @@ a.icon-after .glyphicon {
 
 @media (max-width: 800px) {
   /* line 63, ../scss/style.scss */
-  body.toolbar-drawer {
+  body.toolbar {
     padding-top: 100px !important;
   }
 }
