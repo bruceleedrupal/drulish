@@ -60,7 +60,7 @@
     
     
 }
-body.toolbar-drawer {
+body.toolbar{
   @include breakpoint(max-width $breakpointwidth){
 	padding-top:100px!important;
        }
