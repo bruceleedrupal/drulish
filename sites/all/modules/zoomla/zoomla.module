@@ -60,3 +60,24 @@
 	}
 	
 	
+
+
+function zoomla_field_extra_fields() {
+  $extra['node']['websites'] = array(
+    'display' => array(
+      'company' => array(
+        'label' => t('Company'),
+        'description' => t('Company'),
+        'weight' => 0,
+      ),
+    )
+  );
+  return $extra;
+}
+
+
+function zoomla_node_view($node){ 
+if($node->type=='websites' && isset($node->field_owner['und'][0]['entity'])&&$term=$node->field_owner['und'][0]['entity']) {
+ $node->content['company']=taxonomy_term_show($term);
+ unset($node->content['field_owner']);
+}}
