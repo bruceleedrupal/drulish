@@ -1,83 +1,219 @@
-	<?php
-	
-	// drupal_add_css(drupal_get_path('module', 'zoomla') . '/css/global.css');
-	function zoomla_form_alter(&$form, &$form_state, $form_id) {
-		
+<?php
+
+// drupal_add_css(drupal_get_path('module', 'zoomla') . '/css/global.css');
+function zoomla_form_alter(&$form, &$form_state, $form_id) {
+
+}
+
+
+function zoomla_form_contact_form_node_form_alter(&$form, &$form_state, $form_id) {
+	drupal_set_title('联系我们', PASS_THROUGH);
+	$form['actions']['submit']['#submit'][0]="_zoomla_form_form_node_form_submit";
+}
+
+function _zoomla_form_form_node_form_submit($form, &$form_state){
+	$message='感谢您的留言,我们会尽快与您联系!';
+	$node = node_form_submit_build_node($form, $form_state);
+	$insert = empty($node->nid);
+	node_save($node);
+	$node_link = l(t('view'), 'node/' . $node->nid);
+	$watchdog_args = array('@type' => $node->type, '%title' => $node->title);
+	$t_args = array('@type' => node_type_get_name($node), '%title' => $node->title);
+
+	if ($insert) {
+		watchdog('content', '@type: added %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
+		drupal_set_message($message);
 	}
-	
-	
-	function zoomla_form_contact_form_node_form_alter(&$form, &$form_state, $form_id) {
-		drupal_set_title('联系我们', PASS_THROUGH);
-		$form['actions']['submit']['#submit'][0]="_zoomla_form_form_node_form_submit";
+	else {
+		watchdog('content', '@type: updated %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
+		drupal_set_message($message);
 	}
-	
-	function _zoomla_form_form_node_form_submit($form, &$form_state){
-		$message='感谢您的留言,我们会尽快与您联系!';
-		$node = node_form_submit_build_node($form, $form_state);
-		$insert = empty($node->nid);
-		node_save($node);
-		$node_link = l(t('view'), 'node/' . $node->nid);
-		$watchdog_args = array('@type' => $node->type, '%title' => $node->title);
-		$t_args = array('@type' => node_type_get_name($node), '%title' => $node->title);
-		
-		if ($insert) {
-			watchdog('content', '@type: added %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
-			drupal_set_message($message);
-		}
-		else {
-			watchdog('content', '@type: updated %title.', $watchdog_args, WATCHDOG_NOTICE, $node_link);
-			drupal_set_message($message);
-		}
-		if ($node->nid) {
-			$form_state['values']['nid'] = $node->nid;
-			$form_state['nid'] = $node->nid;
-			$form_state['redirect'] = node_access('view', $node) ? 'node/' . $node->nid : '<front>';
-		}
-		else {
-			// In the unlikely case something went wrong on save, the node will be
-			// rebuilt and node form redisplayed the same way as in preview.
-			drupal_set_message(t('The post could not be saved.'), 'error');
-			$form_state['rebuild'] = TRUE;
-		}
-		// Clear the page and block caches.
-		cache_clear_all();
-			
+	if ($node->nid) {
+		$form_state['values']['nid'] = $node->nid;
+		$form_state['nid'] = $node->nid;
+		$form_state['redirect'] = node_access('view', $node) ? 'node/' . $node->nid : '<front>';
 	}
-	
-	function zoomla_menu() {
-		
-		$items['aaa'] = array(
-				'page callback' => '_zoomla_aaa',
-				'access callback'=>true
-		);
-		return $items;
+	else {
+		// In the unlikely case something went wrong on save, the node will be
+		// rebuilt and node form redisplayed the same way as in preview.
+		drupal_set_message(t('The post could not be saved.'), 'error');
+		$form_state['rebuild'] = TRUE;
 	}
-	
-	function _zoomla_aaa(){
-		ctools_set_no_blocks(true);
-			return "dddd";
-		
-	}
-	
-	
+	// Clear the page and block caches.
+	cache_clear_all();
+
+}
+
+function zoomla_menu() {
+	$items['runcron'] = array(
+			'title' => 'Update websites Status',
+			'page callback' => '_zoomla_update_websites_status',
+			'access callback' => TRUE,
+			);
+
+	$items['aaa'] = array(
+			'page callback' => '_zoomla_aaa',
+			'access callback'=>true
+			);
+	return $items;
+}
+
+function _zoomla_aaa(){
+	ctools_set_no_blocks(true);
+	return "dddd";
+
+}
+
+
 
 
 function zoomla_field_extra_fields() {
-  $extra['node']['websites'] = array(
-    'display' => array(
-      'company' => array(
-        'label' => t('Company'),
-        'description' => t('Company'),
-        'weight' => 0,
-      ),
-    )
-  );
-  return $extra;
+	$extra['node']['websites'] = array(
+			'display' => array(
+				'company' => array(
+					'label' => t('Company'),
+					'description' => t('Company'),
+					'weight' => 0,
+					),
+				)
+			);
+	return $extra;
 }
 
 
 function zoomla_node_view($node){ 
-if($node->type=='websites' && isset($node->field_owner['und'][0]['entity'])&&$term=$node->field_owner['und'][0]['entity']) {
- $node->content['company']=taxonomy_term_show($term);
- unset($node->content['field_owner']);
-}}
+	if($node->type=='websites' && isset($node->field_owner['und'][0]['entity'])&&$term=$node->field_owner['und'][0]['entity']) {
+		$node->content['company']=taxonomy_term_show($term);
+		unset($node->content['field_owner']);
+	}}
+
+function zoomla_query_node_filterd_website_alter(QueryAlterableInterface $query){
+   $checkdays=1;
+   $query->leftJoin('field_data_field_update_time', 'o', 'node.nid = o.entity_id');// AND o.entity_type = "node"');
+   $setdate=date('Y-m-d\TH:i:s',time()-$checkdays*24*3600);
+   $or = db_or(); 
+   $or->condition('o.field_update_time_value',$setdate,'<=');
+   $or->condition('o.field_update_time_value',NULL,'IS NULL');
+   $query->condition($or);
+}
+
+function _zoomla_update_websites_status(){
+        date_default_timezone_set('utc');
+        $setdate=date('Y-m-d\TH:i:s',time()-0*24*3600);
+
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'node')
+		->entityCondition('bundle', 'websites')
+		->propertyCondition('status', NODE_PUBLISHED)
+                ->fieldCondition('field_manual_detect','value',1,'!=')
+                ->addTag('node_filterd_website');
+
+	$result = $query->execute();
+
+	if(isset($result['node'])) {
+		$websites_items_nids = array_keys($result['node']);
+		$websites_items = entity_load('node', $websites_items_nids);
+	} 
+	foreach($websites_items  as $website){
+		$url = $website->field_url['und'][0]['url'];
+		$status= _zoomla_fetch_websites_infomation($url);
+
+
+             if($status['https'])
+                  $website->field_https['und'][0]['value']=1;
+	     else
+                  $website->field_https['und'][0]['value']=0;
+
+
+             if($status['compiled'])
+                  $website->field_compiled['und'][0]['value']=1;
+	     else
+                  $website->field_compiled['und'][0]['value']=0;
+             
+             $website->language=$status['lang'];
+             $website->field_php['und'][0]['value']=$status['php'];
+             $website->field_drupal['und'][0]['value']=$status['drupal'];
+             $website->field_update_time['und'][0]['value']=date('Y-m-d\TH:i:s');
+             $website->field_update_time['und'][0]['timezone']='Asia/Shanghai';
+             $website->field_update_time['und'][0]['timezone_db']='UTC';
+             node_save($website);
+ 
+                
+	}
+}
+
+
+function _zoomla_fetch_websites_infomation($url){
+	$client = new \GuzzleHttp\Client();
+	$status=array(
+			'https'=>false,
+                        'lang'=>'zh_hans',
+                        'php'=>'',
+                        'drupal'=>'',
+                        'compiled'=>false
+		     );
+
+	$res = $client->get($url,['allow_redirects' => ['track_redirects' => true]]);
+	$redirect=$res->getHeaderLine('X-Guzzle-Redirect-History');
+	if($redirect && strpos($redirect,'https')!==FALSE){ 
+		$status['https']=true;
+	}
+      
+
+        $doc=new DOMDocument();      
+        $body=$res->getBody();
+        @$doc->loadHTML($body);
+
+        $xpath = new DOMXPath($doc);
+        $lang= $xpath->query("/html/@lang");
+
+        if($lang->length && $lang->item(0)->nodeValue=='en')
+              $status['lang']='en';
+
+        $php = $res->getHeaderLine('X-Powered-By');
+        $php= explode('/',$php);
+
+        if(isset($php[1]))
+           $status['php']=$php[1];
+
+
+        $drupal=$res->getHeaderLine('X-Generator');
+        if(strpos($drupal,'Drupal 8')!==FALSE)
+          $status['drupal']='8';
+        else
+          $status['drupal']=_zoomla_website_drupal_version($url);
+   
+
+        $status['compiled']=_zoomla_website_drupal_compiled($body);
+
+
+        return $status;
+
+}
+
+
+function _zoomla_website_drupal_version($url){
+        $filename='/CHANGELOG.txt';
+        $url = rtrim($url,"/");
+        $url.=$filename;
+        $client = new \GuzzleHttp\Client();
+        try {$res=$client->get($url);}
+        catch(\GuzzleHttp\Exception\ClientException $e){
+           return '';
+        }
+        $changelog=$res->getBody();
+        preg_match('/Drupal (\d.\d{2})/', $changelog, $matches);
+        if(isset($matches[1]))
+            return $matches[1];
+        else return '';
+}
+
+
+function _zoomla_website_drupal_compiled($body) {
+   preg_match('/js_\S*.js|css_\S*.css/', $body, $matches);
+   if($matches)
+     return TRUE;
+   else 
+     return FALSE;
+
+}
