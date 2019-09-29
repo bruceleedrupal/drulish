@@ -87,6 +87,7 @@
       <?php endif; ?>
 
 	<span class="kf"><a  target="_blank" href="http://wpa.qq.com/msgrd?v=3&amp;uin=2075586694&amp;site=qq&amp;menu=yes" title="逐浪网络科技在线客服"><i class="fa fa-qq " aria-hidden="true"></i></a></span>
+	<span class="kf"><a  target="_blank" href="mqqwpa://im/chat?chat_type=wpa&uin=2075586694&version=1&src_type=web&web_src=oicqzone.com" title="逐浪网络科技在线客服"><i class="fa fa-qq " aria-hidden="true"></i></a></span>
 	
       <?php if (!empty($primary_nav) || !empty($secondary_nav) || !empty($page['navigation'])): ?>
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
